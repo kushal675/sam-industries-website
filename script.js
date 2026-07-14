@@ -73,7 +73,6 @@
           <div class="p-body">
             <div class="p-name">${p.name}</div>
             <span class="p-cat">${p.category}</span>
-            <span class="p-view">View Product →</span>
           </div>`;
         track.appendChild(card);
       }
