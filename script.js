@@ -198,35 +198,45 @@
   /* ---------- Testimonial rotator ---------- */
   const tWrap = document.querySelector('.testimonials');
   if (tWrap) {
-    const dots = tWrap.querySelectorAll('.t-dots button');
-    const prev = tWrap.querySelector('.carousel-arrow.prev');
-    const next = tWrap.querySelector('.carousel-arrow.next');
+    const dotsWrap = tWrap.querySelector('.t-dots');
     const track = tWrap.querySelector('.testimonial-track');
-    const groups = window.__TESTIMONIAL_GROUPS__ || [];
+    const items = window.__TESTIMONIALS__ || [];
     let i = 0;
-    function render() {
-      if (!groups.length) return;
-      track.innerHTML = '';
-      groups[i].forEach(t => {
-        const el = document.createElement('div');
-        el.className = 'testimonial';
-        el.innerHTML = `
-          <div class="stars">${'<svg viewBox="0 0 24 24"><polygon points="12 2 15 9 22 9 17 14 19 21 12 17 5 21 7 14 2 9 9 9"/></svg>'.repeat(5)}</div>
-          <p class="quote">"${t.quote}"</p>
-          <div class="who">
-            <div class="avatar">${t.initials}</div>
-            <div><h6>${t.name}</h6><small>${t.org}</small></div>
-          </div>`;
-        track.appendChild(el);
+    if (dotsWrap && items.length) {
+      dotsWrap.innerHTML = '';
+      items.forEach((_, k) => {
+        const b = document.createElement('button');
+        if (k === 0) b.classList.add('active');
+        b.addEventListener('click', () => { i = k; render(); });
+        dotsWrap.appendChild(b);
       });
-      dots.forEach((d, k) => d.classList.toggle('active', k === i));
     }
-    dots.forEach((d, k) => d.addEventListener('click', () => { i = k; render(); }));
-    prev && prev.addEventListener('click', () => { i = (i - 1 + groups.length) % groups.length; render(); });
-    next && next.addEventListener('click', () => { i = (i + 1) % groups.length; render(); });
+    function render() {
+      if (!items.length) return;
+      const t = items[i];
+      track.innerHTML = `
+        <article class="testimonial-slide">
+          <div class="ts-cert">
+            <div class="ts-cert-frame"><img src="${t.certificate}" alt="Certificate from ${t.org}" loading="lazy"></div>
+          </div>
+          <div class="ts-body">
+            <div class="ts-quote-mark">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7.17 6C4.87 6 3 7.87 3 10.17v7.83h7.83V10.17H6.5c0-1.47 1.2-2.67 2.67-2.67V6H7.17zm10 0c-2.3 0-4.17 1.87-4.17 4.17v7.83h7.83V10.17H16.5c0-1.47 1.2-2.67 2.67-2.67V6h-2z"/></svg>
+            </div>
+            <p class="ts-quote">"${t.quote}"</p>
+            <hr class="ts-divider">
+            <div class="ts-meta">
+              <h6>${t.name}</h6>
+              <small>${t.org}</small>
+            </div>
+          </div>
+        </article>`;
+      dotsWrap && dotsWrap.querySelectorAll('button').forEach((d, k) => d.classList.toggle('active', k === i));
+    }
     render();
-    if (groups.length > 1) setInterval(() => { i = (i + 1) % groups.length; render(); }, 6000);
+    if (items.length > 1) setInterval(() => { i = (i + 1) % items.length; render(); }, 7000);
   }
+
 
   /* ---------- Number count-up on stats ---------- */
   const counters = document.querySelectorAll('[data-count]');
@@ -252,4 +262,5 @@
     }, { threshold: 0.4 });
     counters.forEach(c => io.observe(c));
   }
+  
 })();
