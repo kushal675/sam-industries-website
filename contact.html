@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&display=swap">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=1.0.1)">
 </head>
 <body>
 
@@ -68,7 +68,7 @@ West Bengal, India</p></div></div>
     <div style="display:grid;grid-template-columns:1fr;gap:24px" class="contact-split">
       <div class="form-panel">
         <h3>Send Us a Message</h3>
-        <form id="contact-form" onsubmit="event.preventDefault();var f=this;var s='Message from '+f.name.value;var b='Name: '+f.name.value+'%0D%0AEmail: '+f.email.value+'%0D%0APhone: '+f.phone.value+'%0D%0ACompany: '+f.company.value+'%0D%0ASubject: '+f.subject.value+'%0D%0A%0D%0A'+f.message.value;window.location.href='mailto:sumit@samindgroup.com?subject='+encodeURIComponent(f.subject.value||s)+'&body='+b;">
+        <form id="contact-form" action="send-email.php" method="POST">
           <div class="form-grid">
             <div class="field"><input type="text" name="name" placeholder="Your Name *" required></div>
             <div class="field"><input type="email" name="email" placeholder="Your Email *" required></div>
@@ -77,9 +77,16 @@ West Bengal, India</p></div></div>
             <div class="field full"><input type="text" name="subject" placeholder="Subject *" required></div>
             <div class="field full"><textarea name="message" placeholder="Your Message *&#10;Type your message here..." required></textarea></div>
           </div>
+          <!-- Security: honeypot field — invisible to users, bots auto-fill it -->
+          <div class="hp-field" aria-hidden="true"><input type="text" name="website_url" tabindex="-1" autocomplete="off"></div>
+          <!-- Security: CSRF token — populated by JavaScript on page load -->
+          <input type="hidden" name="_csrf_token" id="csrf-token-field" value="">
+          <!-- Security: form timestamp — set by JavaScript to detect bots/stale submissions -->
+          <input type="hidden" name="_form_ts" id="form-ts-field" value="">
           <div class="form-actions">
             <button type="submit" class="btn btn-primary"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Send Message</button>
           </div>
+          <div id="form-status" class="form-status" style="display:none;"></div>
           <div class="privacy-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Your information is safe with us and will never be shared.</div>
         </form>
       </div>
@@ -146,4 +153,4 @@ West Bengal, India</span></div>
   </div>
   <div class="footer-bottom">© 2025 SAM Industries. All Rights Reserved.</div>
 </footer>
-<script src="script.js"></script></body></html>
+<script src="script.js?v=1.0.1"></script></body></html>

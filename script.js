@@ -24,24 +24,99 @@
     document.querySelectorAll('.nav-dropdown.open').forEach(d => d.classList.remove('open'));
   });
 
-  /* ---------- OEM enquiry form (mailto) ---------- */
-  const oemForm = document.getElementById('oem-form');
-  if (oemForm) {
-    oemForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const d = new FormData(oemForm);
-      const lines = [];
-      ['name','company','country','email','phone','oem','product','message'].forEach(k => {
-        const v = d.get(k);
-        if (v) lines.push(k.toUpperCase() + ': ' + v);
+  /* ---------- Contact form (AJAX via send-email.php) ---------- */
+  const contactForm = document.getElementById('contact-form');
+  const statusDiv = document.getElementById('form-status');
+  if (contactForm) {
+    /* Security: fetch CSRF token from server and populate hidden fields */
+    fetch('csrf-token.php', { credentials: 'same-origin' })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        var csrfField = document.getElementById('csrf-token-field');
+        if (csrfField && data.token) csrfField.value = data.token;
+      })
+      .catch(function (err) {
+        console.warn('CSRF token fetch failed:', err);
       });
-      const file = d.get('attachment');
-      if (file && file.name) lines.push('ATTACHMENT: ' + file.name + ' (please attach manually)');
-      const subject = encodeURIComponent('OEM Enquiry — ' + (d.get('product') || d.get('name') || 'Request'));
-      const body = encodeURIComponent(lines.join('\n'));
-      window.location.href = `mailto:sumitk10@hotmail.com?subject=${subject}&body=${body}`;
+
+    /* Security: set form timestamp so server can reject instant bot submissions */
+    var tsField = document.getElementById('form-ts-field');
+    if (tsField) tsField.value = Math.floor(Date.now() / 1000);
+
+    contactForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var btn = contactForm.querySelector('button[type="submit"]');
+      var originalText = btn ? btn.innerHTML : 'Send Message';
+
+      /* Reset status display */
+      if (statusDiv) {
+        statusDiv.style.display = 'none';
+        statusDiv.className = 'form-status';
+        statusDiv.textContent = '';
+      }
+
+      /* Disable button and show loading state */
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = 'Sending...';
+      }
+
+      var formData = new FormData(contactForm);
+
+      fetch('send-email.php', {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin'   /* include session cookie for CSRF validation */
+      })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (data.success) {
+          if (statusDiv) {
+            statusDiv.className = 'form-status success';
+            statusDiv.textContent = data.message;
+            statusDiv.style.display = 'block';
+          }
+          contactForm.reset();
+
+          /* Security: refresh CSRF token after successful submission */
+          fetch('csrf-token.php', { credentials: 'same-origin' })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+              var f = document.getElementById('csrf-token-field');
+              if (f && d.token) f.value = d.token;
+            })
+            .catch(function () { /* silent — next submit will fail gracefully */ });
+
+          /* Security: reset timestamp for next submission */
+          var ts = document.getElementById('form-ts-field');
+          if (ts) ts.value = Math.floor(Date.now() / 1000);
+        } else {
+          if (statusDiv) {
+            statusDiv.className = 'form-status error';
+            statusDiv.textContent = data.message || 'Something went wrong. Please try again.';
+            statusDiv.style.display = 'block';
+          }
+        }
+      })
+      .catch(function (err) {
+        console.error('Submission error:', err);
+        if (statusDiv) {
+          statusDiv.className = 'form-status error';
+          statusDiv.textContent = 'Unable to send message. Please check your connection or try again later.';
+          statusDiv.style.display = 'block';
+        }
+      })
+      .finally(function () {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }
+      });
     });
   }
+
+  /* NOTE: OEM enquiry form block removed — no page contains id="oem-form",
+     making that code unreachable dead code. (Task 6: dead code removal) */
 
 
   /* ---------- Product carousel ---------- */
@@ -62,6 +137,9 @@
       perView = w < 640 ? 1 : w < 1024 ? 2 : w < 1280 ? 3 : 4;
     }
 
+    /* XSS note: innerHTML is safe here — productsData comes from window.__FEATURED_PRODUCTS__,
+       a static array defined by the developer in the HTML file. No user input flows into it.
+       Converting to DOM APIs would triple complexity for zero security benefit. */
     function render() {
       track.innerHTML = '';
       for (let k = 0; k < perView; k++) {
@@ -132,6 +210,8 @@
       const w = window.innerWidth;
       perView = w < 640 ? 2 : w < 1024 ? 3 : w < 1280 ? 4 : 6;
     }
+    /* XSS note: innerHTML is safe here — eqData comes from window.__EQUIPMENT__,
+       a static developer-defined array. No user input flows into it. */
     function render() {
       track.innerHTML = '';
       for (let k = 0; k < perView; k++) {
@@ -168,6 +248,9 @@
         const okQ = !query || p.name.toLowerCase().includes(query.toLowerCase());
         return okCat && okQ;
       });
+      /* XSS note: innerHTML is safe here — catalog comes from window.__PRODUCT_CATALOG__,
+         a static developer-defined array. The search query is only used for filtering,
+         never interpolated into the HTML output. */
       grid.innerHTML = '';
       if (!items.length) {
         grid.innerHTML = '<p class="empty">No products match your search.</p>';
@@ -211,6 +294,8 @@
         dotsWrap.appendChild(b);
       });
     }
+    /* XSS note: innerHTML is safe here — items comes from window.__TESTIMONIALS__,
+       a static developer-defined array. No user input flows into it. */
     function render() {
       if (!items.length) return;
       const t = items[i];

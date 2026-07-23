@@ -1,0 +1,133 @@
+# ============================================================
+# SAM Industries — Apache Security & Performance Configuration
+# ============================================================
+# This file hardens the website for production hosting on Hostinger.
+# It enforces HTTPS, sets security headers, disables directory
+# listing, protects sensitive files, and enables compression/caching.
+# ============================================================
+
+# ----------------------------------------------------------
+# 1. Force HTTPS (redirect all HTTP traffic to HTTPS)
+# ----------------------------------------------------------
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# ----------------------------------------------------------
+# 2. Security Headers
+# ----------------------------------------------------------
+<IfModule mod_headers.c>
+
+  # Content Security Policy — restricts resource loading origins
+  # Allows: self, Google Fonts (CSS + woff2), Google Maps (iframe)
+  Header set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; frame-src https://www.google.com; connect-src 'self'; base-uri 'self'; form-action 'self';"
+
+  # Prevent clickjacking — only allow framing by same origin
+  Header set X-Frame-Options "SAMEORIGIN"
+
+  # Prevent MIME-type sniffing
+  Header set X-Content-Type-Options "nosniff"
+
+  # Referrer Policy — send origin only on cross-origin requests
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # Permissions Policy — disable unused browser APIs
+  Header set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"
+
+  # HTTP Strict Transport Security — force HTTPS for 1 year, include subdomains
+  Header set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+
+  # Prevent XSS reflection attacks (legacy browsers)
+  Header set X-XSS-Protection "1; mode=block"
+
+</IfModule>
+
+# ----------------------------------------------------------
+# 3. Disable Directory Listing
+# ----------------------------------------------------------
+Options -Indexes
+
+# ----------------------------------------------------------
+# 4. Protect Sensitive Files
+# ----------------------------------------------------------
+# Block access to hidden files (.env, .git, .gitignore, .htaccess itself is allowed by Apache)
+<FilesMatch "^\.(?!htaccess$)">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# Block access to composer, package, and lock files
+<FilesMatch "(composer\.json|composer\.lock|package\.json|package-lock\.json)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# Block access to rate-limit data directory (if it ends up in webroot)
+<IfModule mod_rewrite.c>
+  RewriteRule ^sam_ratelimit/ - [F,L]
+</IfModule>
+
+# Block access to node_modules directory
+<IfModule mod_rewrite.c>
+  RewriteRule ^node_modules/ - [F,L]
+</IfModule>
+
+# ----------------------------------------------------------
+# 5. Gzip Compression
+# ----------------------------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html
+  AddOutputFilterByType DEFLATE text/css
+  AddOutputFilterByType DEFLATE text/javascript
+  AddOutputFilterByType DEFLATE application/javascript
+  AddOutputFilterByType DEFLATE application/json
+  AddOutputFilterByType DEFLATE image/svg+xml
+  AddOutputFilterByType DEFLATE application/xml
+  AddOutputFilterByType DEFLATE text/xml
+</IfModule>
+
+# ----------------------------------------------------------
+# 6. Browser Caching
+# ----------------------------------------------------------
+<IfModule mod_expires.c>
+  ExpiresActive On
+
+  # HTML — short cache (content may change)
+  ExpiresByType text/html "access plus 1 hour"
+
+  # CSS and JavaScript — moderate cache
+  ExpiresByType text/css "access plus 1 month"
+  ExpiresByType application/javascript "access plus 1 month"
+  ExpiresByType text/javascript "access plus 1 month"
+
+  # Images — long cache
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/gif "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+  ExpiresByType image/x-icon "access plus 1 year"
+
+  # Fonts — long cache
+  ExpiresByType font/woff2 "access plus 1 year"
+  ExpiresByType font/woff "access plus 1 year"
+  ExpiresByType application/font-woff2 "access plus 1 year"
+  ExpiresByType application/font-woff "access plus 1 year"
+</IfModule>
+
+# ----------------------------------------------------------
+# 7. Prevent PHP execution in uploads (if uploads dir exists)
+# ----------------------------------------------------------
+<IfModule mod_rewrite.c>
+  RewriteRule ^images/.*\.ph(p[0-9]?|tml)$ - [F,L]
+</IfModule>
