@@ -39,7 +39,7 @@
       if (file && file.name) lines.push('ATTACHMENT: ' + file.name + ' (please attach manually)');
       const subject = encodeURIComponent('OEM Enquiry — ' + (d.get('product') || d.get('name') || 'Request'));
       const body = encodeURIComponent(lines.join('\n'));
-      window.location.href = `mailto:info@samindustries.com?subject=${subject}&body=${body}`;
+      window.location.href = `mailto:sumitk10@hotmail.com?subject=${subject}&body=${body}`;
     });
   }
 
