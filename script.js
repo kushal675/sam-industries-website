@@ -244,9 +244,10 @@
 
     function renderGrid() {
       const items = catalog.filter(p => {
-        const okCat = active === 'hero' ? p.hero : p.categoryKey === active;
         const okQ = !query || p.name.toLowerCase().includes(query.toLowerCase());
-        return okCat && okQ;
+        if (query) return okQ; // searching: match across the whole catalog, ignore category
+        const okCat = active === 'hero' ? p.hero : p.categoryKey === active;
+        return okCat;
       });
       /* XSS note: innerHTML is safe here — catalog comes from window.__PRODUCT_CATALOG__,
          a static developer-defined array. The search query is only used for filtering,
@@ -269,12 +270,18 @@
       });
     }
     filterBtns.forEach(b => b.addEventListener('click', () => {
+      query = '';
+      if (searchEl) searchEl.value = '';
       filterBtns.forEach(x => x.classList.remove('active'));
       b.classList.add('active');
       active = b.dataset.filter;
       renderGrid();
     }));
-    searchEl && searchEl.addEventListener('input', e => { query = e.target.value; renderGrid(); });
+    searchEl && searchEl.addEventListener('input', e => {
+      query = e.target.value;
+      filterBtns.forEach(x => x.classList.toggle('active', !query && x.dataset.filter === active));
+      renderGrid();
+    });
     renderGrid();
   }
 

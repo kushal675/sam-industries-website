@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <url>
+    <loc>https://samindgroup.com/</loc>
+    <priority>1.0</priority>
+  </url>
+
+  <url>
+    <loc>https://samindgroup.com/about</loc>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://samindgroup.com/products</loc>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://samindgroup.com/re-engineering</loc>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://samindgroup.com/infrastructure</loc>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://samindgroup.com/quality</loc>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://samindgroup.com/clients</loc>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://samindgroup.com/contact</loc>
+    <priority>0.8</priority>
+  </url>
+
+</urlset>
