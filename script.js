@@ -208,7 +208,8 @@
     let perView = 6;
     function computePV() {
       const w = window.innerWidth;
-      perView = w < 640 ? 2 : w < 1024 ? 3 : w < 1280 ? 4 : 6;
+      // Keep two equipment cards visible on phones.
+      perView = w <= 639 ? 2 : w < 1024 ? 3 : w < 1280 ? 4 : 6;
     }
     /* XSS note: innerHTML is safe here — eqData comes from window.__EQUIPMENT__,
        a static developer-defined array. No user input flows into it. */
@@ -230,6 +231,20 @@
     prev && prev.addEventListener('click', () => { index = (index - 1 + eqData.length) % eqData.length; render(); });
     next && next.addEventListener('click', () => { index = (index + 1) % eqData.length; render(); });
     window.addEventListener('resize', () => { const p = perView; computePV(); if (p !== perView) render(); });
+
+    // Mobile swipe navigation for the equipment carousel.
+    let touchStartX = 0;
+    const viewport = eqCar.querySelector('.carousel-viewport');
+    viewport && viewport.addEventListener('touchstart', e => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+    viewport && viewport.addEventListener('touchend', e => {
+      const delta = e.changedTouches[0].screenX - touchStartX;
+      if (Math.abs(delta) < 45) return;
+      if (delta < 0) next && next.click();
+      else prev && prev.click();
+    }, { passive: true });
+
     computePV(); render();
   }
 
